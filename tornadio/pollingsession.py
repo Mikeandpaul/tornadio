@@ -30,20 +30,35 @@ class PollingSession(session.Session):
         self.handler = None
         self.send_queue = []
 
-        # Forward some methods to connection
-        self.on_open = self.connection.on_open
-        self.raw_message = self.connection.raw_message
-        self.on_close = self.connection.on_close
-
-        self.reset_heartbeat = self.connection.reset_heartbeat
-        self.stop_heartbeat = self.connection.stop_heartbeat
-        self.delay_heartbeat = self.connection.delay_heartbeat
-
         # Send session_id
         self.send(session_id)
 
         # Notify that channel was opened
         self.on_open(router.request, *args, **kwargs)
+
+    @property
+    def on_open(self):
+        return self.connection.on_open
+
+    @property
+    def raw_message(self):
+        return self.connection.raw_message
+
+    @property
+    def on_close(self):
+        return self.connection.on_close
+
+    @property
+    def reset_heartbeat(self):
+        return self.connection.reset_heartbeat
+
+    @property
+    def stop_heartbeat(self):
+        return self.connection.stop_heartbeat
+
+    @property
+    def delay_heartbeat(self):
+        return self.connection.delay_heartbeat
 
     def on_delete(self, forced):
         """Called by the session management class when item is
@@ -66,7 +81,8 @@ class PollingSession(session.Session):
         """
         if self.handler is not None:
             return False
-
+        
+        # print 'POLLING HANDLER', handler
         self.handler = handler
 
         # Promote session item
@@ -113,14 +129,18 @@ class PollingSession(session.Session):
     def close(self):
         """Forcibly close connection and notify connection object about that.
         """
+        # print 'CLOSING POLLING', self.connection
         if not self.connection.is_closed:
             try:
                 # Notify that connection was closed
                 self.connection.on_close()
             finally:
-                self.connection.is_closed = True
+                self.connection = None
 
     @property
     def is_closed(self):
         """Check if connection was closed or not"""
-        return self.connection.is_closed
+        if self.connection:
+            return self.connection.is_closed
+        else:
+            return True

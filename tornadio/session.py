@@ -32,6 +32,7 @@ class Session(object):
         """Mark object is living, so it won't be collected during next
         run of the session garbage collector.
         """
+        # print 'PROMOTING', self.session_id
         if self.expiry is not None:
             self.promoted = time() + self.expiry
 
@@ -89,6 +90,7 @@ class SessionContainer(object):
 
     def expire(self, current_time=None):
         """Expire any old entries"""
+        # print 'EXPIRE CALLED', self._queue, self._items
         if not self._queue:
             return
 
